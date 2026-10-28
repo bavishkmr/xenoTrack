@@ -8,18 +8,18 @@ import {
 import { BsPeopleFill, BsPersonBadgeFill, BsCollectionFill, BsCalendarCheckFill,
   BsCreditCardFill, BsExclamationTriangleFill, BsClockFill, BsCheckCircleFill } from 'react-icons/bs';
 
-const StatCard = ({ icon, label, value, color, sub }) => (
+const StatCard = ({ icon, label, value, sub }) => (
   <div className="stat-card">
-    <div className={`stat-icon ${color}`}>{icon}</div>
-    <div className="stat-info">
-      <div className="stat-value">{value ?? '—'}</div>
-      <div className="stat-label">{label}</div>
-      {sub && <div className="stat-change" style={{ color: 'var(--color-text-muted)' }}>{sub}</div>}
+    <div className="stat-card-header">
+      <span className="stat-label">{label}</span>
+      <span className="stat-icon">{icon}</span>
     </div>
+    <div className="stat-value">{value ?? '—'}</div>
+    {sub && <div className="stat-change" style={{ color: 'var(--color-text-secondary)', fontSize: '11.5px' }}>{sub}</div>}
   </div>
 );
 
-const COLORS = ['#4F46E5','#10B981','#F59E0B','#EF4444','#0EA5E9'];
+const COLORS = ['#2563EB','#15803D','#B45309','#B91C1C','#0284C7'];
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);

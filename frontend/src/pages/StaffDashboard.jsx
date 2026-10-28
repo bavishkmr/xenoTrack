@@ -3,6 +3,17 @@ import { Link } from 'react-router-dom';
 import { dashboardService } from '../services';
 import { BsCollectionFill, BsPeopleFill, BsCalendarCheckFill } from 'react-icons/bs';
 
+const StatCard = ({ icon, label, value, sub }) => (
+  <div className="stat-card">
+    <div className="stat-card-header">
+      <span className="stat-label">{label}</span>
+      <span className="stat-icon">{icon}</span>
+    </div>
+    <div className="stat-value">{value ?? '—'}</div>
+    {sub && <div className="stat-change" style={{ color: 'var(--color-text-secondary)', fontSize: '11.5px' }}>{sub}</div>}
+  </div>
+);
+
 export default function StaffDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,27 +33,21 @@ export default function StaffDashboard() {
   return (
     <div>
       <div className="grid grid-cols-3" style={{ marginBottom: 24 }}>
-        <div className="stat-card">
-          <div className="stat-icon icon-purple"><BsCollectionFill /></div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.assignedGroupsCount}</div>
-            <div className="stat-label">Assigned Groups</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon icon-blue"><BsPeopleFill /></div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.membersCount}</div>
-            <div className="stat-label">Members Under You</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon icon-green"><BsCalendarCheckFill /></div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.todaySessionsCount}</div>
-            <div className="stat-label">Today's Sessions</div>
-          </div>
-        </div>
+        <StatCard
+          icon={<BsCollectionFill />}
+          label="Assigned Groups"
+          value={stats.assignedGroupsCount}
+        />
+        <StatCard
+          icon={<BsPeopleFill />}
+          label="Members Under You"
+          value={stats.membersCount}
+        />
+        <StatCard
+          icon={<BsCalendarCheckFill />}
+          label="Today's Sessions"
+          value={stats.todaySessionsCount}
+        />
       </div>
 
       <div className="grid grid-cols-2">
