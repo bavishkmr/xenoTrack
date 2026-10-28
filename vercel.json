@@ -4,8 +4,7 @@
     "backend": {
       "root": "backend",
       "framework": "express",
-      "installCommand": "npm install",
-      "startCommand": "node src/server.js"
+      "installCommand": "npm install"
     },
     "frontend": {
       "root": "frontend",
