@@ -49,6 +49,9 @@ if (process.env.NODE_ENV !== 'test') {
 // ── Static uploads ──
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// ── Health check (public) ──
+app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
 // ── API Routes ──
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -59,9 +62,6 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
-
-// ── Health check ──
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // ── Error handling ──
 app.use(notFound);

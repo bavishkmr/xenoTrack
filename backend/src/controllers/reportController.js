@@ -73,7 +73,7 @@ async function getCollectionReport(req, res, next) {
     const { institute_id } = req.user;
     const { from_date, to_date, group_id, program_id, staff_id, payment_method } = req.query;
 
-    let where = 'p.institute_id = ? AND p.is_reversed = 0';
+    let where = 'p.institute_id = ? AND p.is_reversed = FALSE';
     const params = [institute_id];
     if (from_date) { where += ' AND p.payment_date >= ?'; params.push(from_date); }
     if (to_date) { where += ' AND p.payment_date <= ?'; params.push(to_date); }
@@ -117,7 +117,7 @@ async function getOutstandingReport(req, res, next) {
     const { institute_id } = req.user;
     const { status, program_id, group_id } = req.query;
 
-    let where = 'fr.institute_id = ? AND fr.status NOT IN ("paid","waived")';
+    let where = "fr.institute_id = ? AND fr.status NOT IN ('paid','waived')";
     const params = [institute_id];
     if (status) { where += ' AND fr.status = ?'; params.push(status); }
 

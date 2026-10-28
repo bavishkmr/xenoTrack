@@ -109,7 +109,7 @@ async function saveBulkAttendance(req, res, next) {
       await conn.query(
         `INSERT INTO attendance_records (session_id, member_id, status, note, marked_by)
          VALUES (?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE status = VALUES(status), note = VALUES(note), modified_by = ?, modified_at = NOW()`,
+         ON CONFLICT (session_id, member_id) DO UPDATE SET status = EXCLUDED.status, note = EXCLUDED.note, modified_by = ?, modified_at = NOW()`,
         [session_id, rec.member_id, rec.status, rec.note||null, userId, userId]
       );
     }

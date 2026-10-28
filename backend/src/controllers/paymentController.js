@@ -7,7 +7,7 @@ async function list(req, res, next) {
     const { member_id, from_date, to_date, payment_method, collected_by, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    let where = 'p.institute_id = ? AND p.is_reversed = 0';
+    let where = 'p.institute_id = ? AND p.is_reversed = FALSE';
     const params = [institute_id];
     if (member_id) { where += ' AND p.member_id = ?'; params.push(member_id); }
     if (from_date) { where += ' AND p.payment_date >= ?'; params.push(from_date); }
@@ -140,7 +140,7 @@ async function reverse(req, res, next) {
     const pay = rows[0];
     if (pay.is_reversed) { await conn.rollback(); return res.status(400).json({ success: false, message: 'Payment already reversed' }); }
 
-    await conn.query('UPDATE payments SET is_reversed = 1 WHERE id = ?', [id]);
+    await conn.query('UPDATE payments SET is_reversed = TRUE WHERE id = ?', [id]);
     await conn.query(
       'INSERT INTO payment_reversals (payment_id, reversed_by, reason) VALUES (?, ?, ?)',
       [id, userId, reason || null]

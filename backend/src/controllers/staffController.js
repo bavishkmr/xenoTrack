@@ -16,7 +16,7 @@ async function list(req, res, next) {
     }
     const [staff] = await db.query(
       `SELECT sp.*, u.full_name, u.email, u.phone, u.is_active,
-              GROUP_CONCAT(DISTINCT g.name ORDER BY g.name SEPARATOR ', ') as assigned_groups
+              STRING_AGG(DISTINCT g.name, ', ' ORDER BY g.name) as assigned_groups
        FROM staff_profiles sp
        JOIN users u ON u.id = sp.user_id
        LEFT JOIN group_staff_assignments gsa ON gsa.staff_profile_id = sp.id
@@ -57,7 +57,7 @@ async function create(req, res, next) {
 
     const hash = await bcrypt.hash(password, 10);
     const [userResult] = await db.query(
-      'INSERT INTO users (institute_id, email, password_hash, role, full_name, phone) VALUES (?, ?, ?, "staff", ?, ?)',
+      "INSERT INTO users (institute_id, email, password_hash, role, full_name, phone) VALUES (?, ?, ?, 'staff', ?, ?)",
       [institute_id, email.toLowerCase(), hash, full_name, phone || null]
     );
     const userId = userResult.insertId;

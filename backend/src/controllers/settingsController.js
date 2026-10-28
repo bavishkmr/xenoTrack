@@ -32,7 +32,7 @@ async function updateSettings(req, res, next) {
         await conn.query(
           `INSERT INTO institute_settings (institute_id, setting_key, setting_value, updated_by)
            VALUES (?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_by = VALUES(updated_by)`,
+           ON CONFLICT (institute_id, setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_by = EXCLUDED.updated_by`,
           [institute_id, key, value, userId]
         );
       }

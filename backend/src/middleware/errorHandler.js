@@ -1,12 +1,12 @@
 function errorHandler(err, req, res, next) {
   console.error('Unhandled error:', err);
 
-  // MySQL duplicate entry
-  if (err.code === 'ER_DUP_ENTRY') {
+  // MySQL / PostgreSQL duplicate entry
+  if (err.code === 'ER_DUP_ENTRY' || err.code === '23505') {
     return res.status(409).json({ success: false, message: 'A record with this value already exists' });
   }
-  // MySQL foreign key constraint
-  if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_NO_REFERENCED_ROW_2') {
+  // MySQL / PostgreSQL foreign key constraint
+  if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_NO_REFERENCED_ROW_2' || err.code === '23503') {
     return res.status(409).json({ success: false, message: 'Referenced record not found or cannot be deleted' });
   }
 

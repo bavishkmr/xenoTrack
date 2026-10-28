@@ -17,11 +17,11 @@ async function list(req, res, next) {
     }
     if (status) { where.push('m.status = ?'); params.push(status); }
     if (program_id) {
-      where.push('EXISTS (SELECT 1 FROM enrollments e WHERE e.member_id = m.id AND e.program_id = ? AND e.status = "active")');
+      where.push("EXISTS (SELECT 1 FROM enrollments e WHERE e.member_id = m.id AND e.program_id = ? AND e.status = 'active')");
       params.push(program_id);
     }
     if (group_id) {
-      where.push('EXISTS (SELECT 1 FROM enrollments e WHERE e.member_id = m.id AND e.group_id = ? AND e.status = "active")');
+      where.push("EXISTS (SELECT 1 FROM enrollments e WHERE e.member_id = m.id AND e.group_id = ? AND e.status = 'active')");
       params.push(group_id);
     }
 
@@ -29,7 +29,7 @@ async function list(req, res, next) {
     const [[{ total }]] = await db.query(`SELECT COUNT(*) as total FROM members m WHERE ${whereStr}`, params);
     const [members] = await db.query(
       `SELECT m.id, m.member_code, m.full_name, m.phone, m.email, m.gender, m.status, m.registration_date, m.profile_photo,
-              GROUP_CONCAT(DISTINCT p.name ORDER BY p.name SEPARATOR ', ') as programs
+              STRING_AGG(DISTINCT p.name, ', ' ORDER BY p.name) as programs
        FROM members m
        LEFT JOIN enrollments e ON e.member_id = m.id AND e.status = 'active'
        LEFT JOIN programs p ON p.id = e.program_id

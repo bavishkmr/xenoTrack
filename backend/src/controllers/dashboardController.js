@@ -24,7 +24,7 @@ async function getAdminDashboard(req, res, next) {
 
     const [[{ feesCollectedThisMonth }]] = await db.query(
       `SELECT COALESCE(SUM(amount),0) as feesCollectedThisMonth FROM payments
-       WHERE institute_id = ? AND payment_date >= ? AND is_reversed = 0`, [instituteId, monthStart]);
+       WHERE institute_id = ? AND payment_date >= ? AND is_reversed = FALSE`, [instituteId, monthStart]);
     const [[{ pendingFees }]] = await db.query(
       `SELECT COALESCE(SUM(outstanding_balance),0) as pendingFees FROM fee_records
        WHERE institute_id = ? AND status IN ('unpaid','partially_paid','overdue')`, [instituteId]);
@@ -37,7 +37,7 @@ async function getAdminDashboard(req, res, next) {
        FROM payments p
        JOIN members m ON m.id = p.member_id
        JOIN users u ON u.id = p.collected_by
-       WHERE p.institute_id = ? AND p.is_reversed = 0
+       WHERE p.institute_id = ? AND p.is_reversed = FALSE
        ORDER BY p.created_at DESC LIMIT 5`, [instituteId]);
 
     // Recent members
@@ -48,11 +48,11 @@ async function getAdminDashboard(req, res, next) {
 
     // Monthly fee collection chart (last 6 months)
     const [monthlyCollection] = await db.query(
-      `SELECT DATE_FORMAT(payment_date, '%Y-%m') as month,
+      `SELECT TO_CHAR(payment_date, 'YYYY-MM') as month,
               COALESCE(SUM(amount),0) as total
-       FROM payments WHERE institute_id = ? AND is_reversed = 0
-         AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-       GROUP BY month ORDER BY month`, [instituteId]);
+       FROM payments WHERE institute_id = ? AND is_reversed = FALSE
+         AND payment_date >= CURRENT_DATE - INTERVAL '6 month'
+       GROUP BY 1 ORDER BY 1`, [instituteId]);
 
     // Attendance trend (last 7 days)
     const [attendanceTrend] = await db.query(
@@ -61,7 +61,7 @@ async function getAdminDashboard(req, res, next) {
               COUNT(ar.id) as total
        FROM attendance_sessions s
        LEFT JOIN attendance_records ar ON ar.session_id = s.id
-       WHERE s.institute_id = ? AND s.session_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       WHERE s.institute_id = ? AND s.session_date >= CURRENT_DATE - INTERVAL '7 day'
        GROUP BY s.session_date ORDER BY s.session_date`, [instituteId]);
 
     // Fee status breakdown
@@ -115,8 +115,8 @@ async function getStaffDashboard(req, res, next) {
          FROM attendance_sessions s
          JOIN \`groups\` g ON g.id = s.group_id
          LEFT JOIN attendance_records ar ON ar.session_id = s.id
-         WHERE s.group_id IN (?) AND s.session_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-         GROUP BY s.id ORDER BY s.session_date DESC LIMIT 10`, [groupIds]);
+         WHERE s.group_id IN (?) AND s.session_date >= CURRENT_DATE - INTERVAL '7 day'
+         GROUP BY s.id, g.name, s.session_date, s.status ORDER BY s.session_date DESC LIMIT 10`, [groupIds]);
     }
 
     const [[{ membersCount }]] = await db.query(

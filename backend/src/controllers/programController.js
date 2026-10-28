@@ -68,7 +68,7 @@ async function listGroups(req, res, next) {
     const [groups] = await db.query(
       `SELECT g.*, p.name as program_name,
               COUNT(DISTINCT e.member_id) as member_count,
-              GROUP_CONCAT(DISTINCT u.full_name ORDER BY u.full_name SEPARATOR ', ') as staff_names
+              STRING_AGG(DISTINCT u.full_name, ', ' ORDER BY u.full_name) as staff_names
        FROM \`groups\` g
        JOIN programs p ON p.id = g.program_id
        LEFT JOIN enrollments e ON e.group_id = g.id AND e.status = 'active'
@@ -149,8 +149,8 @@ async function assignStaff(req, res, next) {
     if (!g.length) return res.status(404).json({ success: false, message: 'Group not found' });
 
     await db.query(
-      'INSERT INTO group_staff_assignments (group_id, staff_profile_id, is_primary) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE is_primary = VALUES(is_primary)',
-      [groupId, staff_profile_id, is_primary ? 1 : 0]
+      'INSERT INTO group_staff_assignments (group_id, staff_profile_id, is_primary) VALUES (?, ?, ?) ON CONFLICT (group_id, staff_profile_id) DO UPDATE SET is_primary = EXCLUDED.is_primary',
+      [groupId, staff_profile_id, is_primary ? true : false]
     );
     res.json({ success: true, message: 'Staff assigned to group' });
   } catch (err) { next(err); }

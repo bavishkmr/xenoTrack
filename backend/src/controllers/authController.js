@@ -70,7 +70,7 @@ async function refreshToken(req, res, next) {
     // Rotate token
     await db.query('DELETE FROM refresh_tokens WHERE token_hash = ?', [tokenHash]);
 
-    const [userRows] = await db.query('SELECT * FROM users WHERE id = ? AND is_active = 1', [decoded.userId]);
+    const [userRows] = await db.query('SELECT * FROM users WHERE id = ? AND is_active = TRUE', [decoded.userId]);
     if (!userRows.length) return res.status(401).json({ success: false, message: 'User not found' });
 
     const payload = { userId: decoded.userId, instituteId: decoded.instituteId, role: decoded.role };
