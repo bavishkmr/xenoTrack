@@ -361,3 +361,4 @@ CREATE TABLE IF NOT EXISTS institute_settings (
   CONSTRAINT fk_is_institute FOREIGN KEY (institute_id) REFERENCES institutes(id) ON DELETE CASCADE,
   CONSTRAINT fk_is_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
+

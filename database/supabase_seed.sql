@@ -8,12 +8,12 @@ INSERT INTO institutes (id, name, address, phone, email, timezone, currency)
 VALUES (1, 'Xenotrack Demo Institute', '123 Main Street, City, State 400001', '+91-9000000001', 'admin@xenotrack.local', 'Asia/Kolkata', 'INR')
 ON CONFLICT (id) DO NOTHING;
 
--- Admin user (password: Admin@1234)
+-- Admin user (password: 12345xeno)
 INSERT INTO users (id, institute_id, email, password_hash, role, full_name, phone, is_active)
-VALUES (1, 1, 'admin@xenotrack.local',
-  '$2a$10$/mS6sftZjELIsM4PeRLOAOiILvMIvPFXsKuV6eU2A8M/8AK3l9p36', -- Admin@1234 hashed with bcrypt
+VALUES (1, 1, 'admin@xenotrack.com',
+  '$2a$10$oiqZmTdlzvCLHiA9N/EKm.Ft18XqJvasxBYc.bTmsq2TW6DL48dJS', -- 12345xeno hashed with bcrypt
   'admin', 'Super Admin', '+91-9000000001', TRUE)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash;
 
 -- Staff user (password: Staff@1234)
 INSERT INTO users (id, institute_id, email, password_hash, role, full_name, phone, is_active)
