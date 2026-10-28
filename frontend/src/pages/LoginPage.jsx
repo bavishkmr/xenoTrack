@@ -115,8 +115,8 @@ export default function LoginPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div>
                 <div style={{ color: 'var(--color-text-muted)', marginBottom: 2 }}>Admin</div>
-                <div>admin@xenotrack.local</div>
-                <div style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Admin@1234</div>
+                <div>admin@xenotrack.com</div>
+                <div style={{ color: 'var(--color-primary)', fontWeight: 600 }}>12345xeno</div>
               </div>
               <div>
                 <div style={{ color: 'var(--color-text-muted)', marginBottom: 2 }}>Staff</div>
