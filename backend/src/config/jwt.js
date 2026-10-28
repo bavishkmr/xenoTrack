@@ -1,0 +1,36 @@
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+const ACCESS_SECRET  = process.env.JWT_SECRET          || 'dev_access_secret_change_me';
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET  || 'dev_refresh_secret_change_me';
+const ACCESS_EXP     = process.env.JWT_EXPIRES_IN      || '15m';
+const REFRESH_EXP    = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+
+function signAccess(payload) {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXP });
+}
+
+function signRefresh(payload) {
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXP });
+}
+
+function verifyAccess(token) {
+  return jwt.verify(token, ACCESS_SECRET);
+}
+
+function verifyRefresh(token) {
+  return jwt.verify(token, REFRESH_SECRET);
+}
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function refreshExpiresAt() {
+  const days = parseInt((REFRESH_EXP.match(/\d+/) || [7])[0]);
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+module.exports = { signAccess, signRefresh, verifyAccess, verifyRefresh, hashToken, refreshExpiresAt };
