@@ -1,19 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { memberService, programService, feeService } from '../services';
+import { memberService, programService, feeService, settingsService } from '../services';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import { BsPlus, BsSearch, BsFunnel, BsPencil, BsEye, BsPersonSlash } from 'react-icons/bs';
 
 const STATUSES = ['active','inactive','suspended','completed'];
-const GENDERS  = ['male','female','other','prefer_not_to_say'];
 
 export default function MembersPage() {
   const { isAdmin } = useAuth();
   const [members, setMembers] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [genderOptions, setGenderOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ total:0, page:1, totalPages:1 });
   const [filters, setFilters] = useState({ search:'', status:'active', program_id:'', group_id:'' });
@@ -21,6 +21,12 @@ export default function MembersPage() {
   const [editMember, setEditMember] = useState(null);
   const [form, setForm] = useState({ full_name:'', phone:'', email:'', dob:'', gender:'', address:'', emergency_contact:'', notes:'' });
   const [submitting, setSubmitting] = useState(false);
+
+  const fetchGenders = useCallback(() => {
+    settingsService.getGenderOptions({ status: 'active' })
+      .then(r => setGenderOptions(r.data.data || []))
+      .catch(console.error);
+  }, []);
 
   const load = useCallback(async (page = 1) => {
     setLoading(true);
@@ -34,17 +40,28 @@ export default function MembersPage() {
 
   useEffect(() => { load(1); }, [load]);
   useEffect(() => {
-    Promise.all([programService.listPrograms({ status:'active' }), programService.listGroups({ status:'active' })])
-      .then(([p, g]) => { setPrograms(p.data.data); setGroups(g.data.data); });
+    Promise.all([
+      programService.listPrograms({ status:'active' }),
+      programService.listGroups({ status:'active' }),
+      settingsService.getGenderOptions({ status:'active' })
+    ])
+      .then(([p, g, gen]) => {
+        setPrograms(p.data.data);
+        setGroups(g.data.data);
+        setGenderOptions(gen.data.data || []);
+      })
+      .catch(console.error);
   }, []);
 
   const openAdd = () => {
+    fetchGenders();
     setEditMember(null);
     setForm({ full_name:'', phone:'', email:'', dob:'', gender:'', address:'', emergency_contact:'', notes:'' });
     setShowModal(true);
   };
 
   const openEdit = m => {
+    fetchGenders();
     setEditMember(m);
     setForm({ full_name: m.full_name||'', phone: m.phone||'', email: m.email||'', dob: m.dob?.slice(0,10)||'',
       gender: m.gender||'', address: m.address||'', emergency_contact: m.emergency_contact||'', notes: m.notes||'' });
@@ -200,8 +217,18 @@ export default function MembersPage() {
             <div className="form-group">
               <label className="form-label">Gender</label>
               <select className="form-select" value={form.gender} onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}>
-                <option value="">Select gender</option>
-                {GENDERS.map(g => <option key={g} value={g}>{g.replace('_',' ')}</option>)}
+                {genderOptions.length === 0 && !form.gender ? (
+                  <option value="" disabled>No active gender options configured</option>
+                ) : (
+                  <option value="">Select gender</option>
+                )}
+                {genderOptions.map(opt => (
+                  <option key={opt.id} value={opt.name}>{opt.name}</option>
+                ))}
+                {/* If member's saved gender is not in the active options list, preserve and show it */}
+                {form.gender && !genderOptions.some(opt => opt.name.toLowerCase() === form.gender.toLowerCase()) && (
+                  <option value={form.gender}>{form.gender} (Saved)</option>
+                )}
               </select>
             </div>
             <div className="form-group" style={{ gridColumn:'1/-1' }}>

@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS members (
   phone             VARCHAR(20),
   email             VARCHAR(150),
   dob               DATE,
-  gender            VARCHAR(30) CHECK (gender IN ('male','female','other','prefer_not_to_say')),
+  gender            VARCHAR(100),
   address           TEXT,
   emergency_contact VARCHAR(200),
   profile_photo     VARCHAR(500),
@@ -361,4 +361,19 @@ CREATE TABLE IF NOT EXISTS institute_settings (
   CONSTRAINT fk_is_institute FOREIGN KEY (institute_id) REFERENCES institutes(id) ON DELETE CASCADE,
   CONSTRAINT fk_is_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
+
+-- ------------------------------------------------------------
+-- 18. gender_options
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS gender_options (
+  id            SERIAL PRIMARY KEY,
+  institute_id  INTEGER NOT NULL,
+  name          VARCHAR(100) NOT NULL,
+  status        VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_go_institute FOREIGN KEY (institute_id) REFERENCES institutes(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_gender_option_name_institute ON gender_options (institute_id, LOWER(name));
 

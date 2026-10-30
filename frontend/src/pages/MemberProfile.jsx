@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { memberService, programService, feeService } from '../services';
+import { memberService, programService, feeService, settingsService } from '../services';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import { BsPencil, BsPersonCircle, BsPlus } from 'react-icons/bs';
@@ -28,6 +28,13 @@ export default function MemberProfile() {
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [genderOptions, setGenderOptions] = useState([]);
+
+  const fetchGenders = useCallback(() => {
+    settingsService.getGenderOptions({ status: 'active' })
+      .then(r => setGenderOptions(r.data.data || []))
+      .catch(console.error);
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -37,7 +44,10 @@ export default function MemberProfile() {
     finally { setLoading(false); }
   }, [id, navigate]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    fetchGenders();
+  }, [load, fetchGenders]);
 
   useEffect(() => {
     if (showEnroll) {
@@ -56,6 +66,7 @@ export default function MemberProfile() {
   }, [enrollForm.program_id]);
 
   const openEdit = () => {
+    fetchGenders();
     setEditForm({
       full_name: member.full_name || '', phone: member.phone || '',
       email: member.email || '', dob: member.dob?.slice(0, 10) || '',
@@ -250,8 +261,17 @@ export default function MemberProfile() {
             <div className="form-group">
               <label className="form-label">Gender</label>
               <select className="form-select" value={editForm.gender || ''} onChange={e => setEditForm(f => ({ ...f, gender: e.target.value }))}>
-                <option value="">Select</option>
-                {['male','female','other','prefer_not_to_say'].map(g => <option key={g} value={g}>{g.replace('_',' ')}</option>)}
+                {genderOptions.length === 0 && !editForm.gender ? (
+                  <option value="" disabled>No active gender options configured</option>
+                ) : (
+                  <option value="">Select</option>
+                )}
+                {genderOptions.map(opt => (
+                  <option key={opt.id} value={opt.name}>{opt.name}</option>
+                ))}
+                {editForm.gender && !genderOptions.some(opt => opt.name.toLowerCase() === editForm.gender.toLowerCase()) && (
+                  <option value={editForm.gender}>{editForm.gender} (Saved)</option>
+                )}
               </select>
             </div>
             <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Address</label><textarea className="form-control" value={editForm.address || ''} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} rows={2} /></div>
