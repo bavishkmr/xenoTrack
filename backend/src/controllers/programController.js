@@ -44,7 +44,7 @@ async function updateProgram(req, res, next) {
     const { name, description, program_type, default_fee_plan_id, status } = req.body;
     await db.query(
       'UPDATE programs SET name=?, description=?, program_type=?, default_fee_plan_id=?, status=? WHERE id=? AND institute_id=?',
-      [name, description||null, program_type||null, default_fee_plan_id||null, status||'active', id, institute_id]
+      [name, description||null, program_type||null, default_fee_plan_id ? parseInt(default_fee_plan_id, 10) : null, status||'active', id, institute_id]
     );
     await activityLogger.log(institute_id, userId, 'UPDATE_PROGRAM', 'program', id, null, req.body, req.ip);
     const [rows] = await db.query('SELECT * FROM programs WHERE id = ?', [id]);
@@ -110,11 +110,12 @@ async function createGroup(req, res, next) {
   try {
     const { institute_id, id: userId } = req.user;
     const { program_id, name, start_date, end_date, scheduled_days, start_time, end_time, capacity } = req.body;
+    const schedDays = typeof scheduled_days === 'string' ? scheduled_days : JSON.stringify(scheduled_days || []);
     const [result] = await db.query(
       `INSERT INTO \`groups\` (institute_id, program_id, name, start_date, end_date, scheduled_days, start_time, end_time, capacity)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [institute_id, program_id, name, start_date||null, end_date||null,
-       JSON.stringify(scheduled_days || []), start_time||null, end_time||null, capacity||null]
+       schedDays, start_time||null, end_time||null, capacity ? parseInt(capacity, 10) : null]
     );
     await activityLogger.log(institute_id, userId, 'CREATE_GROUP', 'group', result.insertId, null, req.body, req.ip);
     const [rows] = await db.query('SELECT * FROM `groups` WHERE id = ?', [result.insertId]);
@@ -127,11 +128,12 @@ async function updateGroup(req, res, next) {
     const { id } = req.params;
     const { institute_id, id: userId } = req.user;
     const { name, start_date, end_date, scheduled_days, start_time, end_time, capacity, status } = req.body;
+    const schedDays = typeof scheduled_days === 'string' ? scheduled_days : JSON.stringify(scheduled_days || []);
     await db.query(
       `UPDATE \`groups\` SET name=?, start_date=?, end_date=?, scheduled_days=?, start_time=?, end_time=?, capacity=?, status=?
        WHERE id=? AND institute_id=?`,
-      [name, start_date||null, end_date||null, JSON.stringify(scheduled_days||[]),
-       start_time||null, end_time||null, capacity||null, status||'active', id, institute_id]
+      [name, start_date||null, end_date||null, schedDays,
+       start_time||null, end_time||null, capacity ? parseInt(capacity, 10) : null, status||'active', id, institute_id]
     );
     await activityLogger.log(institute_id, userId, 'UPDATE_GROUP', 'group', id, null, req.body, req.ip);
     const [rows] = await db.query('SELECT * FROM `groups` WHERE id = ?', [id]);

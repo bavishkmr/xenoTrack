@@ -40,8 +40,15 @@ export default function StaffPage() {
     e.preventDefault(); setSubmitting(true);
     try {
       const payload = { ...form };
-      if (editItem) { delete payload.password; await staffService.update(editItem.staff_profile_id, payload); toast.success('Staff updated'); }
-      else { await staffService.create(payload); toast.success('Staff account created'); }
+      if (editItem) {
+        delete payload.password;
+        const staffId = editItem.id || editItem.staff_profile_id;
+        await staffService.update(staffId, payload);
+        toast.success('Staff updated');
+      } else {
+        await staffService.create(payload);
+        toast.success('Staff account created');
+      }
       setShowModal(false); load();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
     finally { setSubmitting(false); }
@@ -50,7 +57,8 @@ export default function StaffPage() {
   const handleResetPassword = async e => {
     e.preventDefault(); setSubmitting(true);
     try {
-      await staffService.resetPassword(resetTarget.staff_profile_id, resetPwd);
+      const staffId = resetTarget.id || resetTarget.staff_profile_id;
+      await staffService.resetPassword(staffId, resetPwd);
       toast.success('Password reset successfully'); setShowReset(false); setResetPwd('');
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
     finally { setSubmitting(false); }

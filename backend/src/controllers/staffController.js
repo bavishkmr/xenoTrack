@@ -15,7 +15,7 @@ async function list(req, res, next) {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     const [staff] = await db.query(
-      `SELECT sp.*, u.full_name, u.email, u.phone, u.is_active,
+      `SELECT sp.*, sp.id as staff_profile_id, u.full_name, u.email, u.phone, u.is_active,
               STRING_AGG(DISTINCT g.name, ', ' ORDER BY g.name) as assigned_groups
        FROM staff_profiles sp
        JOIN users u ON u.id = sp.user_id
@@ -75,7 +75,7 @@ async function create(req, res, next) {
       `INSERT INTO staff_profiles (user_id, institute_id, staff_code, designation, joining_date, can_collect_fees, can_edit_attendance)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [userId, institute_id, staffCode, designation || null, joining_date || null,
-       can_collect_fees ? 1 : 0, can_edit_attendance !== false ? 1 : 0]
+       can_collect_fees ? true : false, can_edit_attendance !== false]
     );
     await activityLogger.log(institute_id, adminId, 'CREATE_STAFF', 'staff_profile', spResult.insertId, null, { full_name, email }, req.ip);
     const [created] = await db.query(
@@ -97,7 +97,7 @@ async function update(req, res, next) {
     await db.query('UPDATE users SET full_name=?, phone=? WHERE id=?', [full_name, phone||null, rows[0].user_id]);
     await db.query(
       'UPDATE staff_profiles SET designation=?, joining_date=?, can_collect_fees=?, can_edit_attendance=?, status=? WHERE id=?',
-      [designation||null, joining_date||null, can_collect_fees?1:0, can_edit_attendance?1:0, status||'active', id]
+      [designation||null, joining_date||null, can_collect_fees ? true : false, can_edit_attendance !== false, status||'active', id]
     );
     await activityLogger.log(institute_id, adminId, 'UPDATE_STAFF', 'staff_profile', id, null, req.body, req.ip);
     const [updated] = await db.query(
