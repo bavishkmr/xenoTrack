@@ -30,7 +30,7 @@ async function getAttendanceReport(req, res, next) {
          JOIN members m ON m.id = ar.member_id
          JOIN \`groups\` g ON g.id = s.group_id
          WHERE ${where}
-         GROUP BY m.id, g.id ORDER BY m.full_name`, params
+         GROUP BY m.id, m.member_code, m.full_name, g.id, g.name ORDER BY m.full_name`, params
       );
       return res.json({ success: true, data });
     }
@@ -45,7 +45,7 @@ async function getAttendanceReport(req, res, next) {
          JOIN \`groups\` g ON g.id = s.group_id
          LEFT JOIN attendance_records ar ON ar.session_id = s.id
          WHERE ${where}
-         GROUP BY s.session_date, s.group_id ORDER BY s.session_date DESC`, params
+         GROUP BY s.session_date, s.group_id, g.name ORDER BY s.session_date DESC`, params
       );
       return res.json({ success: true, data });
     }
@@ -62,7 +62,7 @@ async function getAttendanceReport(req, res, next) {
        JOIN programs p ON p.id = g.program_id
        LEFT JOIN attendance_records ar ON ar.session_id = s.id
        WHERE ${where}
-       GROUP BY g.id ORDER BY g.name`, params
+       GROUP BY g.id, g.name, p.name ORDER BY g.name`, params
     );
     res.json({ success: true, data });
   } catch (err) { next(err); }
@@ -101,7 +101,7 @@ async function getCollectionReport(req, res, next) {
       `SELECT u.full_name as staff_name, COUNT(*) as payment_count, SUM(p.amount) as total
        FROM payments p JOIN users u ON u.id = p.collected_by
        WHERE ${where}
-       GROUP BY p.collected_by`, params
+       GROUP BY p.collected_by, u.full_name`, params
     );
 
     const [[{ grandTotal }]] = await db.query(
@@ -124,7 +124,7 @@ async function getOutstandingReport(req, res, next) {
     const [records] = await db.query(
       `SELECT fr.*, m.full_name as member_name, m.member_code, m.phone,
               fp.name as fee_plan_name,
-              DATEDIFF(CURDATE(), fr.due_date) as days_overdue
+              COALESCE(CURRENT_DATE - fr.due_date, 0) as days_overdue
        FROM fee_records fr
        JOIN members m ON m.id = fr.member_id
        LEFT JOIN fee_plans fp ON fp.id = fr.fee_plan_id

@@ -35,7 +35,7 @@ async function listSessions(req, res, next) {
        JOIN users u ON u.id = s.created_by
        LEFT JOIN attendance_records ar ON ar.session_id = s.id
        WHERE ${where}
-       GROUP BY s.id
+       GROUP BY s.id, g.name, p.name, u.full_name
        ORDER BY s.session_date DESC, s.created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, +limit, +offset]

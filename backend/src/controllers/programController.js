@@ -18,7 +18,7 @@ async function listPrograms(req, res, next) {
        LEFT JOIN \`groups\` g ON g.program_id = p.id AND g.status = 'active'
        LEFT JOIN enrollments e ON e.program_id = p.id AND e.status = 'active'
        WHERE ${where}
-       GROUP BY p.id ORDER BY p.name`, params);
+       GROUP BY p.id, fp.name ORDER BY p.name`, params);
     res.json({ success: true, data: programs });
   } catch (err) { next(err); }
 }
@@ -76,7 +76,7 @@ async function listGroups(req, res, next) {
        LEFT JOIN staff_profiles sp ON sp.id = gsa.staff_profile_id
        LEFT JOIN users u ON u.id = sp.user_id
        WHERE ${where}
-       GROUP BY g.id ORDER BY g.name`, params);
+       GROUP BY g.id, p.name ORDER BY g.name`, params);
     res.json({ success: true, data: groups });
   } catch (err) { next(err); }
 }
@@ -173,7 +173,7 @@ async function enroll(req, res, next) {
     const { institute_id, id: userId } = req.user;
     const { member_id, program_id, group_id, fee_plan_id, notes } = req.body;
     const [existing] = await db.query(
-      'SELECT id FROM enrollments WHERE member_id=? AND program_id=? AND group_id<=>?',
+      'SELECT id FROM enrollments WHERE member_id=? AND program_id=? AND group_id IS NOT DISTINCT FROM ?',
       [member_id, program_id, group_id || null]
     );
     if (existing.length) return res.status(409).json({ success: false, message: 'Member already enrolled in this program/group' });

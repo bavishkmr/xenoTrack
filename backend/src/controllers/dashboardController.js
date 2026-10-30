@@ -119,11 +119,14 @@ async function getStaffDashboard(req, res, next) {
          GROUP BY s.id, g.name, s.session_date, s.status ORDER BY s.session_date DESC LIMIT 10`, [groupIds]);
     }
 
-    const [[{ membersCount }]] = await db.query(
-      groupIds.length
-        ? [`SELECT COUNT(DISTINCT e.member_id) as membersCount FROM enrollments e WHERE e.group_id IN (?) AND e.status='active'`, [groupIds]]
-        : ['SELECT 0 as membersCount']
-    );
+    let membersCount = 0;
+    if (groupIds.length) {
+      const [[res]] = await db.query(
+        "SELECT COUNT(DISTINCT e.member_id) as membersCount FROM enrollments e WHERE e.group_id IN (?) AND e.status='active'",
+        [groupIds]
+      );
+      membersCount = res ? (res.memberscount || res.membersCount || 0) : 0;
+    }
 
     res.json({
       success: true,

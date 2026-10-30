@@ -22,7 +22,7 @@ async function list(req, res, next) {
        LEFT JOIN group_staff_assignments gsa ON gsa.staff_profile_id = sp.id
        LEFT JOIN \`groups\` g ON g.id = gsa.group_id AND g.status = 'active'
        WHERE ${where}
-       GROUP BY sp.id ORDER BY u.full_name`, params);
+       GROUP BY sp.id, u.id, u.full_name, u.email, u.phone, u.is_active ORDER BY u.full_name`, params);
     res.json({ success: true, data: staff });
   } catch (err) { next(err); }
 }

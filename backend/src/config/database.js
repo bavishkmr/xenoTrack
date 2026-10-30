@@ -1,5 +1,13 @@
 require('dotenv').config();
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// Parse PostgreSQL types to match standard MySQL / JSON API expectations:
+// 1082 = DATE -> return as 'YYYY-MM-DD' string without UTC timezone shift
+types.setTypeParser(1082, str => str);
+// 20 = INT8 / BIGINT / COUNT(*) -> return as number
+types.setTypeParser(20, val => parseInt(val, 10));
+// 1700 = NUMERIC / DECIMAL -> return as number
+types.setTypeParser(1700, val => parseFloat(val));
 
 let poolConfig;
 
@@ -65,6 +73,9 @@ function transformQuery(sql, params = []) {
 
   // Convert MySQL backticks `groups` to double quotes "groups"
   let text = sql.replace(/`([^`]+)`/g, '"$1"');
+
+  // Convert MySQL <=> NULL-safe equal to PostgreSQL IS NOT DISTINCT FROM
+  text = text.replace(/<=>/g, 'IS NOT DISTINCT FROM');
 
   // Convert boolean column comparisons e.g. is_reversed = 0 -> is_reversed = FALSE
   text = text
