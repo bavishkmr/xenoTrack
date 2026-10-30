@@ -32,24 +32,31 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      settingsService.get(),
-      settingsService.getGenderOptions(),
-    ])
-      .then(([r, gRes]) => {
+    // 1. Load general institute settings
+    settingsService.get()
+      .then(r => {
         const d = r.data.data;
         setData(d);
         if (d.institute) setInstitute(i => ({ ...i, ...d.institute }));
         if (d.settings) {
-          const parsed = {};
-          (d.settings || []).forEach(s => { parsed[s.setting_key] = s.setting_value; });
-          setSettings(s => ({ ...s, ...parsed }));
+          if (Array.isArray(d.settings)) {
+            const parsed = {};
+            d.settings.forEach(s => { parsed[s.setting_key] = s.setting_value; });
+            setSettings(s => ({ ...s, ...parsed }));
+          } else if (typeof d.settings === 'object') {
+            setSettings(s => ({ ...s, ...d.settings }));
+          }
         }
-        setGenderOptions(gRes.data.data || []);
       })
-      .catch(() => toast.error('Failed to load settings'))
+      .catch(err => {
+        console.error('Failed to load institute settings:', err);
+        toast.error('Failed to load institute settings');
+      })
       .finally(() => setLoading(false));
-  }, []);
+
+    // 2. Load gender options
+    loadGenderOptions();
+  }, [loadGenderOptions]);
 
   const handleSave = async e => {
     e.preventDefault(); setSaving(true);
